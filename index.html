@@ -116,9 +116,10 @@
   #shop{
     position:fixed;left:14px;top:14px;bottom:14px;width:230px;z-index:3;
     display:flex;flex-direction:column;gap:10px;overflow-y:auto;
-    scrollbar-width:none;
+    scrollbar-width:thin;scrollbar-color:var(--line) transparent;
   }
-  #shop::-webkit-scrollbar{display:none}
+  #shop::-webkit-scrollbar{width:4px;height:4px}
+  #shop::-webkit-scrollbar-thumb{background:var(--line);border-radius:2px}
   #shopTitle{font-family:var(--mono);font-size:12px;letter-spacing:.2em;color:var(--quiet);text-transform:uppercase;padding-left:2px}
   .upg{
     background:var(--panel);border:1px solid var(--line);border-radius:12px;
@@ -236,8 +237,20 @@
   }
 
   /* ---------- double or nothing ---------- */
-  .upg.gam{border-color:rgba(255,198,61,.6);box-shadow:0 0 16px rgba(255,198,61,.2)}
-  .upg.gam .c{color:var(--gold)}
+  #gamFab{
+    position:fixed;right:18px;bottom:18px;z-index:6;
+    background:linear-gradient(135deg,#241f4a,var(--panel));
+    border:1px solid var(--gold);border-radius:14px;cursor:pointer;outline:none;
+    color:var(--gold);font-family:var(--mono);font-weight:700;font-size:12px;
+    letter-spacing:.14em;text-transform:uppercase;padding:12px 16px;text-align:center;
+    animation:gamPulse 1.6s ease-in-out infinite;
+  }
+  #gamFab small{display:block;color:var(--quiet);font-size:9px;letter-spacing:.2em;margin-top:3px}
+  #gamFab:hover,#gamFab:focus-visible{color:#fff;border-color:#fff}
+  @keyframes gamPulse{
+    0%,100%{box-shadow:0 0 14px rgba(255,198,61,.35)}
+    50%{box-shadow:0 0 30px rgba(255,198,61,.75)}
+  }
   #gamOver{position:fixed;inset:0;background:rgba(5,4,12,.78);z-index:9;display:none;
     align-items:center;justify-content:center}
   #gamOver.on{display:flex}
@@ -316,6 +329,7 @@
     #perSec{margin-top:4px;font-size:12px}
     #rank{margin-top:4px;font-size:10px}
     #feverTag{margin-top:3px}
+    #gamFab{right:10px;bottom:184px;padding:10px 12px;font-size:11px}
   }
   @media (prefers-reduced-motion:reduce){
     #orb,body.fever #orb{animation:none}
@@ -369,6 +383,8 @@
 <div id="flash"></div>
 <div id="redFlash"></div>
 <div id="lvlBanner"></div>
+
+<button id="gamFab">Double or Nothing<small>tap to gamble</small></button>
 
 <div id="gamOver">
   <div id="gamCard">
@@ -868,11 +884,6 @@ box.addEventListener("pointerdown", e => {
 });
 
 /* ============ double or nothing ============ */
-const gamBtnCard = document.createElement("button");
-gamBtnCard.className = "upg gam";
-gamBtnCard.innerHTML = '<div class="n"><span>Double or Nothing</span><span class="lv">50/50</span></div>' +
-  '<div class="d">Stake your points on a coin flip. Win streaks pay extra.</div><div class="c">open the table</div>';
-shopEl.appendChild(gamBtnCard);
 let gStreak = 0, spinning = false, spinI = null;
 const gamOver = $("gamOver");
 function gamPaint() {
@@ -881,7 +892,7 @@ function gamPaint() {
     (gStreak > 0 ? "  (next win pays +" + (25 * gStreak) + "% extra)" : "");
   [["gam25", .25], ["gam50", .5], ["gam100", 1]].forEach(([id]) => $(id).disabled = spinning || S.points < 20);
 }
-gamBtnCard.addEventListener("click", () => { $("gamRes").textContent = ""; gamPaint(); gamOver.classList.add("on"); });
+$("gamFab").addEventListener("click", () => { $("gamRes").textContent = ""; gamPaint(); gamOver.classList.add("on"); });
 function gamClose() { if (!spinning) gamOver.classList.remove("on"); }
 $("gamClose").addEventListener("click", gamClose);
 gamOver.addEventListener("pointerdown", e => { if (e.target === gamOver) gamClose(); });
