@@ -215,6 +215,21 @@
   #box.fly{display:block}
   @keyframes boxWobble{from{transform:rotate(-9deg)}to{transform:rotate(9deg)}}
 
+  /* ---------- timed challenge card ---------- */
+  #chal{
+    position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:6;width:270px;
+    background:var(--panel);border:1px solid var(--cyan);border-radius:12px;
+    padding:10px 14px;display:none;text-align:center;
+    box-shadow:0 0 24px rgba(57,240,224,.25);
+  }
+  #chal.on{display:block;animation:chalIn .3s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes chalIn{from{transform:translate(-50%,-130%);opacity:0}to{transform:translateX(-50%);opacity:1}}
+  #chalT{font-family:var(--mono);font-size:10px;letter-spacing:.24em;color:var(--cyan);text-transform:uppercase}
+  #chalM{font-weight:700;font-size:14px;margin-top:3px}
+  #chalBar{height:6px;border-radius:3px;background:var(--panel-2);overflow:hidden;margin-top:8px}
+  #chalFill{height:100%;width:0%;background:linear-gradient(90deg,var(--cyan),var(--gold));border-radius:3px}
+  #chalTime{font-family:var(--mono);font-size:11px;color:var(--quiet);margin-top:5px;font-variant-numeric:tabular-nums}
+
   /* ---------- footer ---------- */
   #foot{
     position:fixed;bottom:12px;left:0;right:0;z-index:3;
@@ -281,6 +296,12 @@
 </div>
 
 <div id="toasts"></div>
+<div id="chal">
+  <div id="chalT">Challenge</div>
+  <div id="chalM"></div>
+  <div id="chalBar"><div id="chalFill"></div></div>
+  <div id="chalTime"></div>
+</div>
 <button id="box" aria-label="Mystery box">?</button>
 <div id="heat"></div>
 <div id="flash"></div>
@@ -304,7 +325,7 @@ let S = {
   points: 0, total: 0, clicks: 0,
   level: 1, xp: 0,
   crits: 0, bestCombo: 0, goldens: 0,
-  fevers: 0, boxes: 0, rushes: 0, asc: 0, last: 0,
+  fevers: 0, boxes: 0, rushes: 0, chals: 0, asc: 0, last: 0,
   upg: { power: 0, auto: 0, crit: 0, combo: 0, fever: 0, lure: 0 },
   ach: {},
   muted: false
@@ -371,6 +392,8 @@ const sndGold  = () => [523,659,784,1047,1319].forEach((f,i)=>tone(f,.22,"square
 const sndLvl   = () => [392,523,659,784,1047].forEach((f,i)=>tone(f,.3,"sawtooth",.28,i*.09));
 const sndFever = () => { for (let i = 0; i < 9; i++) tone(180 + i * 95, .12, "sawtooth", .3, i * .045); };
 const sndBox   = () => [660,880,660,1175].forEach((f,i)=>tone(f,.12,"square",.3,i*.06));
+const sndChal  = () => { tone(880,.15,"square",.35); tone(660,.15,"square",.35,.18); tone(880,.2,"square",.35,.36); };
+const sndFail  = () => { tone(150,.3,"sawtooth",.4); tone(110,.4,"sawtooth",.4,.15); };
 
 /* ============ canvas particles ============ */
 const cv = $("fx"), cx = cv.getContext("2d");
@@ -485,10 +508,11 @@ const orb = $("orb"), zone = $("orbZone");
 function orbCenter() { const r = zone.getBoundingClientRect(); return [r.left + r.width/2, r.top + r.height/2]; }
 
 function tap(cx_, cy_) {
-  S.clicks++; heatUp();
+  S.clicks++; heatUp(); lastTapAt = performance.now();
   combo = Math.min(combo + 1, comboMax());
   comboT = COMBO_WINDOW;
   if (combo > S.bestCombo) S.bestCombo = combo;
+  chalNote("taps", 1); chalNote("combo", combo);
 
   const isCrit = Math.random() < critCh();
   let gain = tapBase() * (1 + (combo - 1) * 0.1) * buffMult();
@@ -530,6 +554,7 @@ orb.addEventListener("keydown", e => {
 /* ============ points / level ============ */
 function addPoints(n) {
   S.points += n; S.total += n; S.xp += n;
+  chalNote("points", n);
   $("score").classList.remove("pop"); void $("score").offsetWidth; $("score").classList.add("pop");
   while (S.xp >= xpNeed()) { S.xp -= xpNeed(); S.level++; levelUp(); }
   paint();
@@ -618,6 +643,8 @@ const ACHS = [
   ["box1",    "Opened a mystery box",   () => S.boxes >= 1],
   ["box10",   "10 mystery boxes",       () => S.boxes >= 10],
   ["rush1",   "Survived a GOLD RUSH",   () => S.rushes >= 1],
+  ["chal1",   "Challenge complete",     () => S.chals >= 1],
+  ["chal10",  "10 challenges",          () => S.chals >= 10],
   ["asc1",    "Ascended",               () => S.asc >= 1],
   ["asc3",    "Ascended \u00d73",       () => S.asc >= 3],
   ["heatmax", "Maximum heat",           () => heat >= 0.99],
@@ -651,7 +678,7 @@ function spawnGolden(delay) {
     const i = golds.indexOf(f);
     if (i < 0) return;
     golds.splice(i, 1); el.remove();
-    S.goldens++;
+    S.goldens++; chalNote("golden", 1);
     const jackpot = Math.max(500, Math.floor(S.total * 0.06));
     addPoints(jackpot);
     critText(e.clientX, e.clientY, "JACKPOT +" + fmt(jackpot));
@@ -699,6 +726,55 @@ box.addEventListener("pointerdown", e => {
   }
   paint(); checkAch(); save();
 });
+
+/* ============ timed challenges ============ */
+let chal = null, chalWait = 45 + Math.random() * 30, lastTapAt = 0;
+function makeChallenge() {
+  const pick = ["taps", "points", "combo", "golden"][(Math.random() * 4) | 0];
+  let c;
+  if (pick === "taps") c = { type: "taps", goal: 40, dur: 10, text: "Land 40 taps" };
+  else if (pick === "combo") c = { type: "combo", goal: comboMax(), dur: 12, text: "Hit combo \u00d7" + comboMax() };
+  else if (pick === "golden") {
+    c = { type: "golden", goal: 2, dur: 20, text: "Catch 2 golden orbs" };
+    spawnGolden(0.5); spawnGolden(4); spawnGolden(8);
+  } else {
+    // achievable in ~15s of active tapping plus auto income
+    const goal = Math.max(300, Math.floor((tapBase() * 5 * 1.5 + autoRate()) * 15 * 0.8));
+    c = { type: "points", goal, dur: 15, text: "Earn " + fmt(goal) + " pts" };
+  }
+  c.prog = 0; c.t = c.dur;
+  c.reward = Math.max(800, Math.floor(S.total * 0.08));
+  return c;
+}
+function startChallenge() {
+  chal = makeChallenge();
+  $("chalM").textContent = chal.text + "  (+" + fmt(chal.reward) + ")";
+  $("chal").classList.add("on");
+  banner("CHALLENGE"); sndChal(); kick(6);
+}
+function chalNote(kind, val) {
+  if (!chal || chal.type !== kind) return;
+  if (kind === "combo") chal.prog = Math.max(chal.prog, val);
+  else chal.prog += val;
+}
+function winChallenge() {
+  const r = chal.reward;
+  chal = null; S.chals++;
+  $("chal").classList.remove("on");
+  addPoints(r);
+  banner("CHALLENGE +" + fmt(r));
+  flash(); confetti(); kick(12); sndGold(); sndLvl();
+  heat = Math.min(1, heat + 0.2);
+  chalWait = 50 + Math.random() * 40;
+  checkAch(); save();
+}
+function failChallenge() {
+  chal = null;
+  $("chal").classList.remove("on");
+  toast("Challenge", "Failed \u2014 next one comes soon");
+  sndFail();
+  chalWait = 35 + Math.random() * 30;
+}
 
 /* ============ ranks ============ */
 const RANKS = [
@@ -811,6 +887,20 @@ function loop(now) {
     const x = f.fromLeft ? p * (innerWidth + 80) - 60 : innerWidth - p * (innerWidth + 80) + 20;
     const y = f.y0 + Math.sin(p * Math.PI * 3) * f.amp;
     f.el.style.left = x + "px"; f.el.style.top = y + "px";
+  }
+
+  // timed challenges: only offered while the player is actively tapping
+  if (!chal) {
+    if (now - lastTapAt < 8000 && lastTapAt > 0) {
+      chalWait -= dt * (1 + heat * 0.5);
+      if (chalWait <= 0) startChallenge();
+    }
+  } else {
+    chal.t -= dt;
+    $("chalFill").style.width = Math.min(100, chal.prog / chal.goal * 100) + "%";
+    $("chalTime").textContent = chal.t.toFixed(1) + "s";
+    if (chal.prog >= chal.goal) winChallenge();
+    else if (chal.t <= 0) failChallenge();
   }
 
   // gold rush: unlocked by a hot session

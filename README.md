@@ -1,8 +1,12 @@
 # Dopamine Machine
 
+## [>>> PLAY IT HERE <<<](https://krwc.github.io/dopamine-machine/)
+
 A maximally juicy clicker game in a single HTML file. No dependencies, no build step.
 
 Open `index.html` in a browser, turn on sound, tap the orb.
+
+- **Timed challenges** - "land 40 taps", "hit max combo", "catch 2 golden orbs" - beat the clock for jackpots
 
 ## Mechanics
 
