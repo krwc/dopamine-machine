@@ -215,6 +215,67 @@
   #box.fly{display:block}
   @keyframes boxWobble{from{transform:rotate(-9deg)}to{transform:rotate(9deg)}}
 
+  /* ---------- overcharge ---------- */
+  #orb.charging{animation:none}
+
+  /* ---------- goal ladder ---------- */
+  #goalRow{font-family:var(--mono);font-size:11px;color:var(--gold);margin-top:8px;text-align:center;
+    letter-spacing:.05em;font-variant-numeric:tabular-nums;line-height:1.4}
+
+  /* ---------- red flash (losses) ---------- */
+  #redFlash{position:fixed;inset:0;background:radial-gradient(circle,rgba(255,40,70,.45),transparent 70%);
+    opacity:0;pointer-events:none;z-index:8}
+  #redFlash.go{animation:flashOut .6s ease-out}
+
+  /* ---------- cursed orb ---------- */
+  .curse{
+    position:fixed;z-index:6;width:52px;height:52px;border-radius:50%;border:none;cursor:pointer;
+    background:radial-gradient(circle at 32% 28%,#e0b0ff,#9b2bff 50%,#3d0a66);
+    box-shadow:0 0 30px rgba(155,43,255,.8),0 0 80px rgba(255,40,70,.4);
+    outline:none;
+  }
+
+  /* ---------- double or nothing ---------- */
+  .upg.gam{border-color:rgba(255,198,61,.6);box-shadow:0 0 16px rgba(255,198,61,.2)}
+  .upg.gam .c{color:var(--gold)}
+  #gamOver{position:fixed;inset:0;background:rgba(5,4,12,.78);z-index:9;display:none;
+    align-items:center;justify-content:center}
+  #gamOver.on{display:flex}
+  #gamCard{background:var(--panel);border:1px solid var(--gold);border-radius:16px;padding:22px;
+    width:min(330px,92vw);text-align:center;box-shadow:0 0 40px rgba(255,198,61,.25)}
+  #gamTitle{font-family:var(--mono);letter-spacing:.22em;font-size:12px;color:var(--gold);text-transform:uppercase}
+  #gamPts{font-family:var(--mono);font-weight:900;font-size:30px;margin:10px 0 2px;font-variant-numeric:tabular-nums}
+  #gamStreak{font-family:var(--mono);font-size:11px;color:var(--cyan);margin-bottom:6px;font-variant-numeric:tabular-nums}
+  .gamRow{display:flex;gap:8px;justify-content:center;margin-top:10px}
+  .gamBtn{flex:1;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;color:var(--ink);
+    font-family:var(--mono);font-weight:700;font-size:13px;padding:12px 6px;cursor:pointer;outline:none}
+  .gamBtn:hover:not(:disabled),.gamBtn:focus-visible{border-color:var(--gold)}
+  .gamBtn:disabled{opacity:.4;cursor:default}
+  .gamBtn.all{color:var(--gold);border-color:rgba(255,198,61,.5)}
+  #gamClose{margin-top:14px;background:none;border:none;color:var(--quiet);font-family:var(--mono);
+    font-size:12px;cursor:pointer;outline:none}
+  #gamClose:hover,#gamClose:focus-visible{color:var(--ink)}
+  #gamCoin{width:84px;height:84px;border-radius:50%;margin:14px auto 4px;display:none;
+    background:radial-gradient(circle at 32% 28%,#fff6d8,var(--gold) 55%,#c98f00)}
+  #gamCoin.spin{display:block;animation:coinFlash .12s linear infinite alternate}
+  @keyframes coinFlash{
+    from{background:radial-gradient(circle at 32% 28%,#fff,#ff3d8b 60%,#8f0f4d);box-shadow:0 0 30px rgba(255,61,139,.7)}
+    to{background:radial-gradient(circle at 32% 28%,#fff6d8,#ffc63d 60%,#c98f00);box-shadow:0 0 30px rgba(255,198,61,.8)}
+  }
+  #gamRes{font-weight:900;font-size:26px;letter-spacing:.06em;margin-top:8px;min-height:32px}
+
+  /* ---------- transcendence ---------- */
+  #transOver{position:fixed;inset:0;z-index:10;display:none;align-items:center;justify-content:center;
+    background:radial-gradient(circle,#1b1833,#0b0a14 75%)}
+  #transOver.on{display:flex}
+  #transCard{text-align:center;padding:24px;max-width:460px}
+  #transTitle{font-weight:900;font-size:clamp(34px,7vw,58px);letter-spacing:.12em;text-transform:uppercase;
+    text-shadow:0 0 40px var(--gold),0 0 80px var(--magenta)}
+  #transStats{font-family:var(--mono);color:var(--quiet);font-size:13px;margin-top:16px;line-height:2;font-variant-numeric:tabular-nums}
+  #transGo{margin-top:22px;background:none;border:1px solid var(--gold);border-radius:10px;color:var(--gold);
+    font-family:var(--mono);font-size:13px;padding:10px 22px;cursor:pointer;outline:none}
+  #transGo:hover,#transGo:focus-visible{background:rgba(255,198,61,.12)}
+
   /* ---------- timed challenge card ---------- */
   #chal{
     position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:6;width:270px;
@@ -288,6 +349,7 @@
   <div id="levelWrap">
     <div id="levelRow"><span>Level <b id="lvlVal">1</b></span><span id="xpTxt">0 / 100</span></div>
     <div id="xpBar"><div id="xpFill"></div></div>
+    <div id="goalRow"></div>
   </div>
 </div>
 
@@ -305,7 +367,32 @@
 <button id="box" aria-label="Mystery box">?</button>
 <div id="heat"></div>
 <div id="flash"></div>
+<div id="redFlash"></div>
 <div id="lvlBanner"></div>
+
+<div id="gamOver">
+  <div id="gamCard">
+    <div id="gamTitle">Double or Nothing</div>
+    <div id="gamPts">0</div>
+    <div id="gamStreak">win streak &times;0</div>
+    <div id="gamCoin"></div>
+    <div id="gamRes"></div>
+    <div class="gamRow">
+      <button class="gamBtn" id="gam25">25%</button>
+      <button class="gamBtn" id="gam50">50%</button>
+      <button class="gamBtn all" id="gam100">ALL IN</button>
+    </div>
+    <button id="gamClose">walk away</button>
+  </div>
+</div>
+
+<div id="transOver">
+  <div id="transCard">
+    <div id="transTitle">Transcendence</div>
+    <div id="transStats"></div>
+    <button id="transGo">keep going forever</button>
+  </div>
+</div>
 
 <div id="foot">
   <span id="stats"></span>
@@ -326,6 +413,8 @@ let S = {
   level: 1, xp: 0,
   crits: 0, bestCombo: 0, goldens: 0,
   fevers: 0, boxes: 0, rushes: 0, chals: 0, asc: 0, last: 0,
+  gambles: 0, gambleWins: 0, streakBest: 0, allin: 0,
+  curses: 0, overBest: 0, buys: 0, goalIdx: 0, trans: 0,
   upg: { power: 0, auto: 0, crit: 0, combo: 0, fever: 0, lure: 0 },
   ach: {},
   muted: false
@@ -394,6 +483,10 @@ const sndFever = () => { for (let i = 0; i < 9; i++) tone(180 + i * 95, .12, "sa
 const sndBox   = () => [660,880,660,1175].forEach((f,i)=>tone(f,.12,"square",.3,i*.06));
 const sndChal  = () => { tone(880,.15,"square",.35); tone(660,.15,"square",.35,.18); tone(880,.2,"square",.35,.36); };
 const sndFail  = () => { tone(150,.3,"sawtooth",.4); tone(110,.4,"sawtooth",.4,.15); };
+const sndWin   = () => [523,659,784,1047].forEach((f,i)=>tone(f,.18,"square",.35,i*.06));
+const sndLose  = () => [300,220,160,110].forEach((f,i)=>tone(f,.25,"sawtooth",.4,i*.09));
+const sndCurse = () => { tone(220,.5,"sawtooth",.45); tone(233,.5,"sawtooth",.45,.02); tone(90,.6,"sine",.5,.1); };
+const sndBurst = () => { tone(70,.5,"sawtooth",.7); tone(55,.6,"square",.5,.05); tone(2000,.05,"square",.2); };
 
 /* ============ canvas particles ============ */
 const cv = $("fx"), cx = cv.getContext("2d");
@@ -546,10 +639,50 @@ function tap(cx_, cy_) {
   }
   checkAch();
 }
-orb.addEventListener("pointerdown", e => tap(e.clientX, e.clientY));
+/* ---- overcharge: hold the orb to build a multiplier, release to cash out.
+   Past x8 it can burst at a hidden random point and cost 10% of your points. ---- */
+let holdT0 = 0, charging = false, chargeM = 1, burstAt = 0, chargeAcc = 0;
+const orbLabel = $("orbLabel");
+function chargeStop() {
+  holdT0 = 0; charging = false; chargeAcc = 0;
+  orb.classList.remove("charging");
+  orb.style.transform = "";
+  orbLabel.textContent = "TAP"; orbLabel.style.color = "";
+}
+function cashOut() {
+  const m = chargeM;
+  const gain = Math.max(1, Math.floor(tapBase() * m * buffMult()));
+  const [x, y] = orbCenter();
+  addPoints(gain);
+  if (m > S.overBest) S.overBest = m;
+  critText(x, y - 60, "OVERCHARGE \u00d7" + m + "  +" + fmt(gain));
+  burst(x, y, Math.min(20 + m * 4, 120), ["#ffc63d", "#39f0e0", "#fff3c4"], 6 + m * 0.15, 3.5);
+  kick(Math.min(4 + m * 0.5, 16));
+  sndWin();
+  chargeStop(); checkAch(); save();
+}
+function doBurst() {
+  const penalty = Math.floor(S.points * 0.10);
+  S.points -= penalty;
+  const [x, y] = orbCenter();
+  floatNum(x, y - 40, "BURST  -" + fmt(penalty), "#ff2846", 30);
+  burst(x, y, 90, ["#ff2846", "#ff6a3d", "#3d0a66"], 9, 4);
+  $("redFlash").classList.remove("go"); void $("redFlash").offsetWidth; $("redFlash").classList.add("go");
+  kick(18); sndBurst(); combo = 0; comboT = 0;
+  chargeStop(); paint(); save();
+}
+orb.addEventListener("pointerdown", e => {
+  tap(e.clientX, e.clientY);
+  holdT0 = performance.now();
+  try { orb.setPointerCapture(e.pointerId); } catch (err) {}
+});
+orb.addEventListener("pointerup", () => { if (charging) cashOut(); else holdT0 = 0; });
+orb.addEventListener("pointercancel", () => chargeStop());
 orb.addEventListener("keydown", e => {
   if (e.key === " " || e.key === "Enter") { e.preventDefault(); const [x,y] = orbCenter(); tap(x, y); }
 });
+orb.addEventListener("keyup", () => { holdT0 = 0; });
+orb.addEventListener("contextmenu", e => e.preventDefault());   // long-press hold on mobile
 
 /* ============ points / level ============ */
 function addPoints(n) {
@@ -585,7 +718,7 @@ UPGRADES.forEach(u => {
   b.addEventListener("click", () => {
     const c = cost(u);
     if (S.points < c) return;
-    S.points -= c; S.upg[u.k]++;
+    S.points -= c; S.upg[u.k]++; S.buys++;
     sndBuy(); toast("Upgrade", u.n + " \u2192 Lv " + S.upg[u.k]);
     const r = b.getBoundingClientRect();
     burst(r.right, r.top + r.height/2, 18, ["#39f0e0","#f4f0ff"], 4, 2.5);
@@ -645,6 +778,12 @@ const ACHS = [
   ["rush1",   "Survived a GOLD RUSH",   () => S.rushes >= 1],
   ["chal1",   "Challenge complete",     () => S.chals >= 1],
   ["chal10",  "10 challenges",          () => S.chals >= 10],
+  ["gamble1", "First gamble won",       () => S.gambleWins >= 1],
+  ["allin",   "Won an ALL IN",          () => S.allin >= 1],
+  ["streak3", "Gamble streak \u00d73", () => S.streakBest >= 3],
+  ["curse1",  "Paid the curse",         () => S.curses >= 1],
+  ["over15",  "Overcharge \u00d715",   () => S.overBest >= 15],
+  ["trans",   "TRANSCENDENT",           () => S.trans >= 1],
   ["asc1",    "Ascended",               () => S.asc >= 1],
   ["asc3",    "Ascended \u00d73",       () => S.asc >= 3],
   ["heatmax", "Maximum heat",           () => heat >= 0.99],
@@ -658,6 +797,7 @@ function checkAch() {
       sndAch(); confetti(); save();
     }
   }
+  checkGoal();
 }
 
 /* ============ golden orbs (multi, for gold rush) ============ */
@@ -726,6 +866,135 @@ box.addEventListener("pointerdown", e => {
   }
   paint(); checkAch(); save();
 });
+
+/* ============ double or nothing ============ */
+const gamBtnCard = document.createElement("button");
+gamBtnCard.className = "upg gam";
+gamBtnCard.innerHTML = '<div class="n"><span>Double or Nothing</span><span class="lv">50/50</span></div>' +
+  '<div class="d">Stake your points on a coin flip. Win streaks pay extra.</div><div class="c">open the table</div>';
+shopEl.appendChild(gamBtnCard);
+let gStreak = 0, spinning = false, spinI = null;
+const gamOver = $("gamOver");
+function gamPaint() {
+  $("gamPts").textContent = fmt(S.points) + " pts";
+  $("gamStreak").textContent = "win streak \u00d7" + gStreak +
+    (gStreak > 0 ? "  (next win pays +" + (25 * gStreak) + "% extra)" : "");
+  [["gam25", .25], ["gam50", .5], ["gam100", 1]].forEach(([id]) => $(id).disabled = spinning || S.points < 20);
+}
+gamBtnCard.addEventListener("click", () => { $("gamRes").textContent = ""; gamPaint(); gamOver.classList.add("on"); });
+function gamClose() { if (!spinning) gamOver.classList.remove("on"); }
+$("gamClose").addEventListener("click", gamClose);
+gamOver.addEventListener("pointerdown", e => { if (e.target === gamOver) gamClose(); });
+addEventListener("keydown", e => { if (e.key === "Escape") gamClose(); });
+function gamble(frac) {
+  if (spinning) return;
+  const stake = Math.floor(S.points * frac);
+  if (stake < 1) return;
+  spinning = true; S.gambles++;
+  $("gamRes").textContent = ""; gamPaint();
+  $("gamCoin").classList.add("spin");
+  let hi = false;
+  spinI = setInterval(() => { hi = !hi; tone(hi ? 660 : 440, .08, "square", .25); }, 130);
+  setTimeout(() => {
+    clearInterval(spinI); $("gamCoin").classList.remove("spin");
+    const win = Math.random() < 0.5;
+    const res = $("gamRes");
+    if (win) {
+      const payout = Math.floor(stake * (1 + 0.25 * gStreak));
+      gStreak++; S.gambleWins++;
+      if (gStreak > S.streakBest) S.streakBest = gStreak;
+      if (frac === 1) S.allin = 1;
+      addPoints(payout);
+      res.textContent = "WIN  +" + fmt(payout); res.style.color = "#ffc63d";
+      confetti(); kick(10); sndWin();
+    } else {
+      S.points -= stake; gStreak = 0;
+      res.textContent = "LOST  -" + fmt(stake); res.style.color = "#ff2846";
+      $("redFlash").classList.remove("go"); void $("redFlash").offsetWidth; $("redFlash").classList.add("go");
+      kick(12); sndLose(); paint();
+    }
+    spinning = false; gamPaint(); checkAch(); save();
+  }, 1400);
+}
+$("gam25").addEventListener("click", () => gamble(.25));
+$("gam50").addEventListener("click", () => gamble(.5));
+$("gam100").addEventListener("click", () => gamble(1));
+
+/* ============ cursed orb: 60% dark jackpot, 40% it feeds on you ============ */
+let curseT = 60 + Math.random() * 60, curseEl = null, curseF = null;
+function spawnCurse() {
+  const el = document.createElement("button");
+  el.className = "curse"; el.setAttribute("aria-label", "Cursed orb \u2014 risky!");
+  document.body.appendChild(el);
+  curseEl = el;
+  curseF = { t: 0, dur: 4, fromLeft: Math.random() < 0.5,
+    y0: innerHeight * (0.12 + Math.random() * 0.5), amp: 60 + Math.random() * 60 };
+  el.addEventListener("pointerdown", e => {
+    el.remove(); curseEl = null; curseF = null;
+    if (Math.random() < 0.6) {
+      const jp = Math.max(1000, Math.floor(S.total * 0.12));
+      addPoints(jp);
+      critText(e.clientX, e.clientY, "DARK JACKPOT +" + fmt(jp));
+      burst(e.clientX, e.clientY, 100, ["#9b2bff", "#e0b0ff", "#ffc63d"], 8, 4);
+      confetti(); kick(14); sndGold();
+    } else {
+      const loss = Math.floor(S.points * 0.20);
+      S.points -= loss; S.curses++;
+      floatNum(e.clientX, e.clientY, "CURSED  -" + fmt(loss), "#ff2846", 28);
+      burst(e.clientX, e.clientY, 70, ["#ff2846", "#9b2bff", "#3d0a66"], 7, 3.5);
+      $("redFlash").classList.remove("go"); void $("redFlash").offsetWidth; $("redFlash").classList.add("go");
+      kick(14); sndCurse(); paint();
+    }
+    checkAch(); save();
+  });
+}
+
+/* ============ the goal ladder (purpose) ============ */
+const GOALS = [
+  { t: "Reach level 5",          test: () => S.level >= 5,       rt: "+500 pts",      r: () => addPoints(500) },
+  { t: "Hit combo \u00d710",     test: () => S.bestCombo >= 10,  rt: "+1.5k pts",     r: () => addPoints(1500) },
+  { t: "Buy 4 upgrades",         test: () => S.buys >= 4,        rt: "instant FEVER", r: () => startFever() },
+  { t: "Catch 3 golden orbs",    test: () => S.goldens >= 3,     rt: "+5k pts",       r: () => addPoints(5000) },
+  { t: "Win a challenge",        test: () => S.chals >= 1,       rt: "+8k pts",       r: () => addPoints(8000) },
+  { t: "Win a gamble",           test: () => S.gambleWins >= 1,  rt: "+10k pts",      r: () => addPoints(10000) },
+  { t: "Overcharge to \u00d712", test: () => S.overBest >= 12,   rt: "+20k pts",      r: () => addPoints(20000) },
+  { t: "Reach 100k lifetime",    test: () => S.total >= 1e5,     rt: "\u00d72 for 60s", r: () => { doubleT = 60; } },
+  { t: "Gamble streak \u00d73",  test: () => S.streakBest >= 3,  rt: "+50k pts",      r: () => addPoints(50000) },
+  { t: "Ascend",                 test: () => S.asc >= 1,         rt: "+25k pts",      r: () => addPoints(25000) },
+  { t: "Reach 1M lifetime",      test: () => S.total >= 1e6,     rt: "max heat",      r: () => { heat = 1; } },
+  { t: "Win 10 challenges",      test: () => S.chals >= 10,      rt: "+200k pts",     r: () => addPoints(200000) },
+  { t: "Ascend 3 times",         test: () => S.asc >= 3,         rt: "+1M pts",       r: () => addPoints(1e6) },
+  { t: "Reach 25M lifetime",     test: () => S.total >= 25e6,    rt: "???",           r: () => transcend() }
+];
+let goalBusy = false;
+function checkGoal() {
+  if (goalBusy) return;
+  goalBusy = true;
+  while (S.goalIdx < GOALS.length && GOALS[S.goalIdx].test()) {
+    const g = GOALS[S.goalIdx];
+    S.goalIdx++;
+    banner("GOAL COMPLETE");
+    toast("Goal " + S.goalIdx + "/" + GOALS.length, g.t + " \u2014 " + g.rt);
+    flash(); confetti(); sndLvl();
+    g.r(); save();
+  }
+  goalBusy = false;
+  const row = $("goalRow");
+  row.textContent = S.goalIdx < GOALS.length
+    ? "GOAL " + (S.goalIdx + 1) + "/" + GOALS.length + ": " + GOALS[S.goalIdx].t + "  (" + GOALS[S.goalIdx].rt + ")"
+    : "you have transcended \u2014 endless mode";
+}
+function transcend() {
+  S.trans = 1;
+  $("transStats").innerHTML =
+    "lifetime <b>" + fmt(S.total) + "</b> pts<br>" +
+    fmt(S.clicks) + " taps \u00b7 " + S.fevers + " fevers \u00b7 " + S.goldens + " golden orbs<br>" +
+    S.chals + " challenges \u00b7 " + S.gambleWins + " gambles won \u00b7 ascension " + S.asc;
+  $("transOver").classList.add("on");
+  confetti(); confetti(); confetti(); sndLvl(); sndGold(); kick(16);
+  checkAch(); save();
+}
+$("transGo").addEventListener("click", () => $("transOver").classList.remove("on"));
 
 /* ============ timed challenges ============ */
 let chal = null, chalWait = 45 + Math.random() * 30, lastTapAt = 0;
@@ -836,6 +1105,26 @@ let last = performance.now(), autoAcc = 0, glowAcc = 0;
 function loop(now) {
   const dt = Math.min((now - last) / 1000, 0.1); last = now;
 
+  // overcharge: transition into charging after a 350ms hold, then climb
+  if (holdT0 && !charging && now - holdT0 > 350) {
+    charging = true; chargeM = 1; chargeAcc = 0;
+    burstAt = 8 + Math.random() * 22;      // hidden burst point, always past x8
+    orb.classList.add("charging");
+  }
+  if (charging) {
+    chargeAcc += dt;
+    if (chargeAcc >= 0.22) {
+      chargeAcc = 0; chargeM++;
+      tone(200 + chargeM * 40, .06, "square", .3);
+      if (chargeM >= burstAt) doBurst();
+    }
+    if (charging) {
+      orb.style.transform = "scale(" + (1 + Math.min(chargeM, 30) * 0.012) + ")";
+      orbLabel.textContent = "\u00d7" + chargeM;
+      orbLabel.style.color = chargeM < 8 ? "#fff" : (chargeM < 16 ? "#ffc63d" : "#ff2846");
+    }
+  }
+
   // combo decay
   if (comboT > 0) {
     comboT -= dt;
@@ -901,6 +1190,23 @@ function loop(now) {
     $("chalTime").textContent = chal.t.toFixed(1) + "s";
     if (chal.prog >= chal.goal) winChallenge();
     else if (chal.t <= 0) failChallenge();
+  }
+
+  // cursed orb: only once you have something to lose
+  if (S.total > 5000) {
+    if (!curseEl) {
+      curseT -= dt * (1 + heat);
+      if (curseT <= 0) { spawnCurse(); curseT = 50 + Math.random() * 70; }
+    } else if (curseF) {
+      curseF.t += dt;
+      const p = curseF.t / curseF.dur;
+      if (p >= 1) { curseEl.remove(); curseEl = null; curseF = null; }
+      else {
+        const x = curseF.fromLeft ? p * (innerWidth + 80) - 60 : innerWidth - p * (innerWidth + 80) + 20;
+        curseEl.style.left = x + "px";
+        curseEl.style.top = (curseF.y0 + Math.sin(p * Math.PI * 4) * curseF.amp) + "px";
+      }
+    }
   }
 
   // gold rush: unlocked by a hot session
