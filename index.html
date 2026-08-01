@@ -268,14 +268,34 @@
   #gamClose{margin-top:14px;background:none;border:none;color:var(--quiet);font-family:var(--mono);
     font-size:12px;cursor:pointer;outline:none}
   #gamClose:hover,#gamClose:focus-visible{color:var(--ink)}
-  #gamCoin{width:84px;height:84px;border-radius:50%;margin:14px auto 4px;display:none;
-    background:radial-gradient(circle at 32% 28%,#fff6d8,var(--gold) 55%,#c98f00)}
-  #gamCoin.spin{display:block;animation:coinFlash .12s linear infinite alternate}
-  @keyframes coinFlash{
-    from{background:radial-gradient(circle at 32% 28%,#fff,#ff3d8b 60%,#8f0f4d);box-shadow:0 0 30px rgba(255,61,139,.7)}
-    to{background:radial-gradient(circle at 32% 28%,#fff6d8,#ffc63d 60%,#c98f00);box-shadow:0 0 30px rgba(255,198,61,.8)}
-  }
-  #gamRes{font-weight:900;font-size:26px;letter-spacing:.06em;margin-top:8px;min-height:32px}
+  #gamRes{font-weight:900;font-size:22px;letter-spacing:.06em;margin-top:6px;min-height:28px}
+  #slotBody{display:flex;gap:14px;align-items:center;justify-content:center;margin-top:12px}
+  #reelsWrap{padding:12px;border:2px solid var(--gold);border-radius:14px;
+    background:linear-gradient(180deg,#1b1833,#141225);animation:gamPulse 1.6s ease-in-out infinite}
+  .reels{display:flex;gap:8px;justify-content:center}
+  .reel{width:58px;height:150px;overflow:hidden;border-radius:8px;background:var(--panel-2);
+    border:1px solid var(--line);position:relative}
+  .reel .strip{display:flex;flex-direction:column}
+  .reel .cell{height:50px;display:flex;align-items:center;justify-content:center;font-size:27px;flex-shrink:0}
+  .reel.hit{border-color:var(--gold);box-shadow:0 0 18px rgba(255,198,61,.6)}
+  .payline{position:absolute;left:0;right:0;top:50px;height:50px;pointer-events:none;
+    border-top:1px dashed rgba(255,198,61,.35);border-bottom:1px dashed rgba(255,198,61,.35)}
+  /* the lever */
+  #lever{display:flex;flex-direction:column;align-items:center;gap:8px;user-select:none}
+  #leverTrack{width:14px;height:150px;border-radius:8px;background:var(--panel-2);
+    border:1px solid var(--line);position:relative}
+  #leverKnob{width:34px;height:34px;border-radius:50%;position:absolute;left:50%;top:0;
+    transform:translate(-50%,0);cursor:grab;touch-action:none;outline:none;border:none;
+    background:radial-gradient(circle at 32% 28%,#fff6d8,var(--gold) 55%,#c98f00);
+    box-shadow:0 0 16px rgba(255,198,61,.6)}
+  #leverKnob:focus-visible{box-shadow:0 0 0 3px var(--cyan)}
+  #leverKnob.snap{transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
+  #leverKnob.dead{filter:grayscale(1);opacity:.5;cursor:default}
+  #leverLbl{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--gold);
+    text-transform:uppercase;text-align:center;line-height:1.6}
+  #payt{font-family:var(--mono);font-size:10px;color:var(--quiet);margin-top:10px;
+    line-height:1.7;letter-spacing:.04em}
+  .gamBtn.sel{border-color:var(--gold);color:var(--gold);background:rgba(255,198,61,.08)}
 
   /* ---------- transcendence ---------- */
   #transOver{position:fixed;inset:0;z-index:10;display:none;align-items:center;justify-content:center;
@@ -384,20 +404,33 @@
 <div id="redFlash"></div>
 <div id="lvlBanner"></div>
 
-<button id="gamFab">Double or Nothing<small>tap to gamble</small></button>
+<button id="gamFab">Slots<small>pull the lever</small></button>
 
 <div id="gamOver">
   <div id="gamCard">
-    <div id="gamTitle">Double or Nothing</div>
+    <div id="gamTitle">Dopamine Slots</div>
     <div id="gamPts">0</div>
-    <div id="gamStreak">win streak &times;0</div>
-    <div id="gamCoin"></div>
+    <div id="slotBody">
+      <div id="reelsWrap">
+        <div class="reels">
+          <div class="reel"><div class="strip" id="reel0"></div><div class="payline"></div></div>
+          <div class="reel"><div class="strip" id="reel1"></div><div class="payline"></div></div>
+          <div class="reel"><div class="strip" id="reel2"></div><div class="payline"></div></div>
+        </div>
+      </div>
+      <div id="lever">
+        <div id="leverTrack"><button id="leverKnob" aria-label="Pull the lever to spin"></button></div>
+        <div id="leverLbl">pull</div>
+      </div>
+    </div>
     <div id="gamRes"></div>
     <div class="gamRow">
-      <button class="gamBtn" id="gam25">25%</button>
-      <button class="gamBtn" id="gam50">50%</button>
-      <button class="gamBtn all" id="gam100">ALL IN</button>
+      <button class="gamBtn" id="bet5">5%</button>
+      <button class="gamBtn sel" id="bet10">10%</button>
+      <button class="gamBtn" id="bet25">25%</button>
+      <button class="gamBtn all" id="betMax">MAX</button>
     </div>
+    <div id="payt"></div>
     <button id="gamClose">walk away</button>
   </div>
 </div>
@@ -429,7 +462,7 @@ let S = {
   level: 1, xp: 0,
   crits: 0, bestCombo: 0, goldens: 0,
   fevers: 0, boxes: 0, rushes: 0, chals: 0, asc: 0, last: 0,
-  gambles: 0, gambleWins: 0, streakBest: 0, allin: 0,
+  gambles: 0, gambleWins: 0, bigWins: 0, jackpots: 0, allin: 0,
   curses: 0, overBest: 0, buys: 0, goalIdx: 0, trans: 0,
   upg: { power: 0, auto: 0, crit: 0, combo: 0, fever: 0, lure: 0 },
   ach: {},
@@ -794,9 +827,10 @@ const ACHS = [
   ["rush1",   "Survived a GOLD RUSH",   () => S.rushes >= 1],
   ["chal1",   "Challenge complete",     () => S.chals >= 1],
   ["chal10",  "10 challenges",          () => S.chals >= 10],
-  ["gamble1", "First gamble won",       () => S.gambleWins >= 1],
-  ["allin",   "Won an ALL IN",          () => S.allin >= 1],
-  ["streak3", "Gamble streak \u00d73", () => S.streakBest >= 3],
+  ["gamble1", "First slot win",         () => S.gambleWins >= 1],
+  ["allin",   "Won on a MAX bet",       () => S.allin >= 1],
+  ["bigwin",  "Slots BIG WIN \u00d78+", () => S.bigWins >= 1],
+  ["jackpot", "TRIPLE BOLT JACKPOT",    () => S.jackpots >= 1],
   ["curse1",  "Paid the curse",         () => S.curses >= 1],
   ["over15",  "Overcharge \u00d715",   () => S.overBest >= 15],
   ["trans",   "TRANSCENDENT",           () => S.trans >= 1],
@@ -883,53 +917,158 @@ box.addEventListener("pointerdown", e => {
   paint(); checkAch(); save();
 });
 
-/* ============ double or nothing ============ */
-let gStreak = 0, spinning = false, spinI = null;
+/* ============ dopamine slots (with a lever) ============ */
+/* Weighted reels; RTP ~= 1.008, win rate ~= 47% (verified numerically). */
+const SYMS = [
+  { s: "\u{1F352}", w: .34  },   // cherries
+  { s: "\u{1F34B}", w: .27  },   // lemon
+  { s: "\u{1F514}", w: .18  },   // bell
+  { s: "\u2b50",    w: .12  },   // star
+  { s: "\u{1F48E}", w: .066 },   // gem
+  { s: "\u26a1",    w: .024 }    // bolt = jackpot
+];
+const TRIPLE_PAY = { "\u{1F352}": 4, "\u{1F34B}": 6, "\u{1F514}": 10, "\u2b50": 18, "\u{1F48E}": 40, "\u26a1": 150 };
+function pickSym() {
+  let r = Math.random();
+  for (const x of SYMS) { r -= x.w; if (r <= 0) return x.s; }
+  return SYMS[0].s;
+}
+function slotPayout(a, b, c) {
+  if (a === b && b === c) return { m: TRIPLE_PAY[a], triple: true };
+  const n = {}; [a, b, c].forEach(x => n[x] = (n[x] || 0) + 1);
+  if (n["\u26a1"] === 2) return { m: 6 };
+  if (n["\u{1F48E}"] === 2) return { m: 3 };
+  if (n["\u{1F352}"] === 2 || n["\u{1F34B}"] === 2) return { m: 1.5 };
+  return { m: 0 };
+}
+const CELL = 50, LEAD = 14;             // strip: LEAD random cells, then [x, FINAL, x]
+let spinning = false, betFrac = 0.10;
 const gamOver = $("gamOver");
+const reelEls = [$("reel0"), $("reel1"), $("reel2")];
+function fillStrip(el, finalSym) {
+  el.innerHTML = "";
+  for (let i = 0; i < LEAD; i++) {
+    const d = document.createElement("div"); d.className = "cell";
+    d.textContent = pickSym(); el.appendChild(d);
+  }
+  [pickSym(), finalSym, pickSym()].forEach(sym => {
+    const d = document.createElement("div"); d.className = "cell";
+    d.textContent = sym; el.appendChild(d);
+  });
+}
+function stakeNow() { return Math.min(S.points, Math.max(10, Math.floor(S.points * betFrac))); }
 function gamPaint() {
   $("gamPts").textContent = fmt(S.points) + " pts";
-  $("gamStreak").textContent = "win streak \u00d7" + gStreak +
-    (gStreak > 0 ? "  (next win pays +" + (25 * gStreak) + "% extra)" : "");
-  [["gam25", .25], ["gam50", .5], ["gam100", 1]].forEach(([id]) => $(id).disabled = spinning || S.points < 20);
+  const can = !spinning && S.points >= 10;
+  [["bet5", .05], ["bet10", .10], ["bet25", .25], ["betMax", 1]].forEach(([id, f]) => {
+    const b = $(id);
+    b.disabled = spinning;
+    b.classList.toggle("sel", betFrac === f);
+  });
+  $("leverKnob").classList.toggle("dead", !can);
+  $("leverLbl").textContent = can ? "pull \u00b7 bet " + fmt(stakeNow()) : "need 10+ pts";
 }
-$("gamFab").addEventListener("click", () => { $("gamRes").textContent = ""; gamPaint(); gamOver.classList.add("on"); });
+[["bet5", .05], ["bet10", .10], ["bet25", .25], ["betMax", 1]].forEach(([id, f]) =>
+  $(id).addEventListener("click", () => { betFrac = f; sndBuy(); gamPaint(); }));
+$("gamFab").addEventListener("click", () => {
+  $("gamRes").textContent = "";
+  reelEls.forEach(el => { if (!el.childElementCount) fillStrip(el, pickSym()); el.style.transform = "translateY(" + (-LEAD * CELL) + "px)"; });
+  $("payt").innerHTML =
+    "3\u00d7\u26a1 pays 150 + GOLD RUSH &nbsp; 3\u00d7\u{1F48E} 40 &nbsp; 3\u00d7\u2b50 18<br>" +
+    "3\u00d7\u{1F514} 10 &nbsp; 3\u00d7\u{1F34B} 6 &nbsp; 3\u00d7\u{1F352} 4 &nbsp; " +
+    "2\u00d7\u26a1 6 &nbsp; 2\u00d7\u{1F48E} 3 &nbsp; pairs 1.5";
+  gamPaint(); gamOver.classList.add("on");
+});
 function gamClose() { if (!spinning) gamOver.classList.remove("on"); }
 $("gamClose").addEventListener("click", gamClose);
 gamOver.addEventListener("pointerdown", e => { if (e.target === gamOver) gamClose(); });
 addEventListener("keydown", e => { if (e.key === "Escape") gamClose(); });
-function gamble(frac) {
-  if (spinning) return;
-  const stake = Math.floor(S.points * frac);
-  if (stake < 1) return;
+
+function spinSlots() {
+  if (spinning || S.points < 10) return;
+  const stake = stakeNow();
+  const isMax = betFrac === 1;
   spinning = true; S.gambles++;
-  $("gamRes").textContent = ""; gamPaint();
-  $("gamCoin").classList.add("spin");
-  let hi = false;
-  spinI = setInterval(() => { hi = !hi; tone(hi ? 660 : 440, .08, "square", .25); }, 130);
+  S.points -= stake; paint(); gamPaint();
+  $("gamRes").textContent = "";
+  const finals = [pickSym(), pickSym(), pickSym()];
+  const durs = [900, 1500, 2200];
+  reelEls.forEach((el, i) => {
+    fillStrip(el, finals[i]);
+    el.parentElement.classList.remove("hit");
+    el.style.transition = "none"; el.style.transform = "translateY(0)";
+    void el.offsetWidth;
+    el.style.transition = "transform " + durs[i] + "ms cubic-bezier(.15,.85,.25,1)";
+    el.style.transform = "translateY(" + (-LEAD * CELL) + "px)";
+    setTimeout(() => { tone(140 + i * 30, .12, "square", .5); kick(2); }, durs[i]);
+  });
+  const ticker = setInterval(() => tone(500 + Math.random() * 300, .04, "square", .16), 80);
   setTimeout(() => {
-    clearInterval(spinI); $("gamCoin").classList.remove("spin");
-    const win = Math.random() < 0.5;
+    clearInterval(ticker);
+    const { m, triple } = slotPayout(finals[0], finals[1], finals[2]);
+    const won = Math.floor(stake * m);
     const res = $("gamRes");
-    if (win) {
-      const payout = Math.floor(stake * (1 + 0.25 * gStreak));
-      gStreak++; S.gambleWins++;
-      if (gStreak > S.streakBest) S.streakBest = gStreak;
-      if (frac === 1) S.allin = 1;
-      addPoints(payout);
-      res.textContent = "WIN  +" + fmt(payout); res.style.color = "#ffc63d";
-      confetti(); kick(10); sndWin();
+    if (won > 0) {
+      S.gambleWins++;
+      if (isMax) S.allin = 1;
+      if (m >= 8) S.bigWins = (S.bigWins || 0) + 1;
+      addPoints(won);
+      if (triple) reelEls.forEach(el => el.parentElement.classList.add("hit"));
+      if (finals[0] === "\u26a1" && triple) {
+        S.jackpots = (S.jackpots || 0) + 1;
+        res.textContent = "JACKPOT  +" + fmt(won); res.style.color = "#ffc63d";
+        banner("TRIPLE BOLT JACKPOT");
+        flash(); confetti(); confetti(); kick(18); sndGold(); sndLvl();
+        goldRush();
+      } else if (m >= 8) {
+        res.textContent = "BIG WIN \u00d7" + m + "  +" + fmt(won); res.style.color = "#ffc63d";
+        banner("BIG WIN \u00d7" + m);
+        flash(); confetti(); kick(12); sndWin(); sndGold();
+      } else {
+        res.textContent = "WIN \u00d7" + m + "  +" + fmt(won); res.style.color = m >= 3 ? "#ffc63d" : "#39f0e0";
+        sndWin(); kick(6);
+      }
     } else {
-      S.points -= stake; gStreak = 0;
-      res.textContent = "LOST  -" + fmt(stake); res.style.color = "#ff2846";
-      $("redFlash").classList.remove("go"); void $("redFlash").offsetWidth; $("redFlash").classList.add("go");
-      kick(12); sndLose(); paint();
+      res.textContent = "-" + fmt(stake); res.style.color = "#ff2846";
+      sndLose();
     }
-    spinning = false; gamPaint(); checkAch(); save();
-  }, 1400);
+    spinning = false; paint(); gamPaint(); checkAch(); save();
+  }, durs[2] + 150);
 }
-$("gam25").addEventListener("click", () => gamble(.25));
-$("gam50").addEventListener("click", () => gamble(.5));
-$("gam100").addEventListener("click", () => gamble(1));
+
+/* the lever: drag the knob down past 70% to fire */
+const knob = $("leverKnob"), LEVER_MAX = 116;
+let leverStart = null, leverTicked = 0;
+knob.addEventListener("pointerdown", e => {
+  if (knob.classList.contains("dead")) return;
+  leverStart = e.clientY; leverTicked = 0;
+  knob.classList.remove("snap");
+  try { knob.setPointerCapture(e.pointerId); } catch (err) {}
+});
+knob.addEventListener("pointermove", e => {
+  if (leverStart === null) return;
+  const y = Math.max(0, Math.min(LEVER_MAX, e.clientY - leverStart));
+  knob.style.transform = "translate(-50%," + y + "px)";
+  if (y - leverTicked > 14) { leverTicked = y; tone(220 + y * 2, .04, "square", .3); }
+});
+function leverRelease(e) {
+  if (leverStart === null) return;
+  const y = Math.max(0, Math.min(LEVER_MAX, e.clientY - leverStart));
+  leverStart = null;
+  knob.classList.add("snap");
+  knob.style.transform = "translate(-50%,0)";
+  if (y >= LEVER_MAX * 0.7) { tone(110, .2, "square", .6); spinSlots(); }
+}
+knob.addEventListener("pointerup", leverRelease);
+knob.addEventListener("pointercancel", leverRelease);
+knob.addEventListener("keydown", e => {
+  if ((e.key === " " || e.key === "Enter") && !knob.classList.contains("dead")) {
+    e.preventDefault();
+    knob.classList.add("snap"); knob.style.transform = "translate(-50%," + LEVER_MAX + "px)";
+    setTimeout(() => { knob.style.transform = "translate(-50%,0)"; }, 180);
+    tone(110, .2, "square", .6); spinSlots();
+  }
+});
 
 /* ============ cursed orb: 60% dark jackpot, 40% it feeds on you ============ */
 let curseT = 60 + Math.random() * 60, curseEl = null, curseF = null;
@@ -967,10 +1106,10 @@ const GOALS = [
   { t: "Buy 4 upgrades",         test: () => S.buys >= 4,        rt: "instant FEVER", r: () => startFever() },
   { t: "Catch 3 golden orbs",    test: () => S.goldens >= 3,     rt: "+5k pts",       r: () => addPoints(5000) },
   { t: "Win a challenge",        test: () => S.chals >= 1,       rt: "+8k pts",       r: () => addPoints(8000) },
-  { t: "Win a gamble",           test: () => S.gambleWins >= 1,  rt: "+10k pts",      r: () => addPoints(10000) },
+  { t: "Win at the slots",       test: () => S.gambleWins >= 1,  rt: "+10k pts",      r: () => addPoints(10000) },
   { t: "Overcharge to \u00d712", test: () => S.overBest >= 12,   rt: "+20k pts",      r: () => addPoints(20000) },
   { t: "Reach 100k lifetime",    test: () => S.total >= 1e5,     rt: "\u00d72 for 60s", r: () => { doubleT = 60; } },
-  { t: "Gamble streak \u00d73",  test: () => S.streakBest >= 3,  rt: "+50k pts",      r: () => addPoints(50000) },
+  { t: "Hit a BIG WIN (\u00d78+)", test: () => S.bigWins >= 1,  rt: "+50k pts",      r: () => addPoints(50000) },
   { t: "Ascend",                 test: () => S.asc >= 1,         rt: "+25k pts",      r: () => addPoints(25000) },
   { t: "Reach 1M lifetime",      test: () => S.total >= 1e6,     rt: "max heat",      r: () => { heat = 1; } },
   { t: "Win 10 challenges",      test: () => S.chals >= 10,      rt: "+200k pts",     r: () => addPoints(200000) },

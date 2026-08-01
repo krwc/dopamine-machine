@@ -17,7 +17,7 @@ Open the link above (or `index.html` locally), turn on sound, tap the orb.
 - **Upgrades** - tap power, auto-tapper, crit chance, combo cap, fever charge, golden lure
 - **Ascension** - prestige reset for a permanent multiplier on everything
 - **Overcharge** - hold the orb to build a x1-x30 multiplier; release to cash out, but past x8 it can burst at a hidden random point and cost you 10% of your points
-- **Double or Nothing** - stake 25%, 50%, or ALL IN on a coin flip; win streaks pay extra
+- **Dopamine Slots** - a 3-reel slot machine with a lever you actually pull; weighted symbols, a real paytable, ~101% player return, and a triple-bolt JACKPOT that triggers a GOLD RUSH
 - **Cursed orb** - 60% dark jackpot, 40% it eats 20% of your points; clicking it is always your choice
 - **Timed challenges** - tap sprints, point rushes, combo targets, golden-orb hunts against the clock
 - **The goal ladder** - 14 sequential goals with named rewards, ending in TRANSCENDENCE
